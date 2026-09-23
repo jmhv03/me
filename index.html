@@ -623,6 +623,7 @@
   var ALIASES = {
     'usa': 'united states of america', 'us': 'united states of america', 'united states': 'united states of america',
     'ni': 'northern ireland', 'n. ireland': 'northern ireland',
+    'reunion': 'réunion', 'la reunion': 'réunion', 'la réunion': 'réunion', 'guiana': 'french guiana',
     'czech republic': 'czechia', 'holland': 'netherlands', 'the netherlands': 'netherlands',
     'ivory coast': "côte d'ivoire", 'bosnia': 'bosnia and herz.', 'bosnia and herzegovina': 'bosnia and herz.',
     'dominican republic': 'dominican rep.', 'south korea': 'south korea', 'north macedonia': 'macedonia',
@@ -848,6 +849,47 @@
     return feats.slice(0, i).concat(nations, feats.slice(i + 1));
   }
 
+  // Overseas parts that the map data bundles into their parent country, split out by location
+  // [name, west, south, east, north]
+  var OVERSEAS = {
+    'France': [
+      ['French Guiana', -55, 1.5, -51, 6.5],
+      ['Guadeloupe', -61.9, 15.8, -60.9, 16.6],
+      ['Martinique', -61.3, 14.3, -60.7, 15],
+      ['Réunion', 55, -21.5, 56, -20.8],
+      ['Mayotte', 44.9, -13.1, 45.4, -12.5]
+    ],
+    'Netherlands': [
+      ['Bonaire', -68.5, 11.9, -68.1, 12.4],
+      ['Sint Eustatius', -63.05, 17.4, -62.9, 17.55],
+      ['Saba', -63.3, 17.58, -63.18, 17.7]
+    ]
+  };
+  function splitOverseas(feats) {
+    Object.keys(OVERSEAS).forEach(function (parent) {
+      var i = feats.findIndex(function (f) { return f.properties.name === parent; });
+      if (i < 0) return;
+      var f = feats[i];
+      var polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      var keep = [], parts = {};
+      polys.forEach(function (poly) {
+        var r = poly[0], mx = 0, my = 0;
+        r.forEach(function (p) { mx += p[0]; my += p[1]; });
+        mx /= r.length; my /= r.length;
+        var hit = OVERSEAS[parent].find(function (o) { return mx >= o[1] && mx <= o[3] && my >= o[2] && my <= o[4]; });
+        if (hit) (parts[hit[0]] = parts[hit[0]] || []).push(poly);
+        else keep.push(poly);
+      });
+      if (!Object.keys(parts).length) return;
+      var out = [{ type: 'Feature', properties: f.properties, geometry: { type: 'MultiPolygon', coordinates: keep } }];
+      Object.keys(parts).forEach(function (n) {
+        out.push({ type: 'Feature', properties: { name: n }, geometry: { type: 'MultiPolygon', coordinates: parts[n] } });
+      });
+      feats.splice.apply(feats, [i, 1].concat(out));
+    });
+    return feats;
+  }
+
   function decode(topo, objKey, tol) {
     var t = topo.transform;
     var arcs = topo.arcs.map(function (a) {
@@ -875,6 +917,7 @@
     }).filter(function (f) { return f.geometry; });
     feats.forEach(fixWinding);
     feats = splitUK(feats);
+    feats = splitOverseas(feats);
     feats.forEach(function (f) { f.bounds = d3.geoBounds(f); });
     // every arc once, so shared borders are only drawn a single time
     var mesh = { type: 'MultiLineString', coordinates: arcs.concat(UK_LINES) };
@@ -1037,7 +1080,8 @@
   // Posts are read from posts.json next to this page.
   // It accepts Instagram's own export file (posts_1.json) as-is, or a simple list like:
   // [ { "images": ["media/one.jpg", "media/two.jpg"], "caption": "Text", "date": "2025-03-14" } ]
-  var SOURCE = 'posts.json';
+  // Any of these files that exist next to this page are merged into one grid (missing ones are skipped)
+  var SOURCES = ['posts.json', 'posts_2.json', 'posts_3.json', 'posts_4.json', 'posts_5.json', 'reels.json'];
   var PAGE = 12;
 
   var grid = document.getElementById('post-grid');
@@ -1059,7 +1103,7 @@
   }
 
   function normalise(data) {
-    var list = Array.isArray(data) ? data : (data.ig_posts || data.posts || []);
+    var list = Array.isArray(data) ? data : (data.ig_posts || data.posts || data.ig_reels_media || []);
     return list.map(function (p) {
       var images, caption, time;
       if (p.media) {
@@ -1180,10 +1224,17 @@
     if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
   });
 
-  fetch(SOURCE)
-    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
-    .then(function (data) {
-      posts = normalise(data);
+  Promise.all(SOURCES.map(function (src) {
+    return fetch(src)
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(normalise)
+      .catch(function () { return []; });
+  }))
+    .then(function (lists) {
+      var seen = {};
+      posts = [].concat.apply([], lists)
+        .filter(function (p) { var k = p.images[0]; if (seen[k]) return false; seen[k] = 1; return true; })
+        .sort(function (a, b) { return (b.time || 0) - (a.time || 0); });
       document.getElementById('post-count').textContent = posts.length;
       if (!posts.length) { empty.hidden = false; return; }
       renderMore();
