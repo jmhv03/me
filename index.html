@@ -148,19 +148,13 @@
   .links a:hover { background: var(--gold); color: var(--black); }
   .links a:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
 
-  footer {
-    margin-top: 4rem;
-    font-size: .75rem;
-    color: var(--text-dim);
-  }
-
 
   /* Blueprint sketches */
   main { position: relative; z-index: 1; }
   .blueprint { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .sk {
     position: absolute;
-    width: clamp(130px, 20vw, 250px);
+    width: clamp(110px, 14vw, 190px);
     height: auto;
     overflow: visible;
     fill: none;
@@ -170,10 +164,12 @@
     stroke-linejoin: round;
     opacity: .75;
   }
-  .sk-ski   { top: 6%;  left: 4%; }
-  .sk-wind  { top: 6%;  right: 4%; }
-  .sk-bow   { bottom: 6%; left: 4%; }
-  .sk-ball  { bottom: 7%; right: 5%; }
+  .sk-ski   { top: 4%;  left: 4%; }
+  .sk-axe   { top: 50%; left: 4%;  transform: translateY(-50%); }
+  .sk-bow   { bottom: 4%; left: 4%; }
+  .sk-wind  { top: 4%;  right: 4%; }
+  .sk-mouse { top: 50%; right: 5%; transform: translateY(-50%); }
+  .sk-ball  { bottom: 5%; right: 5%; }
   .sk path { stroke-dasharray: 1; stroke-dashoffset: 0; }
   .sk .guide { stroke-width: .8; stroke-dasharray: .015 .015; opacity: .6; }
   .sk text {
@@ -187,6 +183,7 @@
     .sk { width: 110px; opacity: .4; }
     .sk-ski, .sk-wind { top: 2%; }
     .sk-bow, .sk-ball { bottom: 2%; }
+    .sk-axe, .sk-mouse { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -220,6 +217,29 @@
 <path d="M108 55 L150 62 M106 88 L172 96 M103 160 L150 150" pathLength="1" style="--i:7"/>
 <path d="M58 218 L52 236 L68 220" pathLength="1" style="--i:8"/>
 <text x="100" y="249" style="--i:9">250 L</text>
+</svg>
+<svg class="sk sk-axe" viewBox="0 0 220 250" aria-hidden="true">
+<path class="guide" d="M110 8 V246" pathLength="1" style="--i:0"/>
+<path class="guide" d="M24 14 H205" pathLength="1" style="--i:1"/>
+<path class="guide" d="M24 9 V19 M205 9 V19" pathLength="1" style="--i:2"/>
+<path d="M24 38 L60 28 H150 Q186 32 206 60 Q178 47 150 44 H60 L26 46 Z" pathLength="1" style="--i:3"/>
+<path d="M160 46 l4 5 l3 -4 l4 5 l3 -4 l4 5 l3 -4" pathLength="1" style="--i:4"/>
+<path d="M104 44 L100 214 M116 44 L112 214" pathLength="1" style="--i:5"/>
+<path d="M100 214 L106 240 L112 214" pathLength="1" style="--i:6"/>
+<path d="M101 160 Q80 175 88 200 Q96 214 102 196" pathLength="1" style="--i:7"/>
+<path d="M99 120 H117 M98 134 H116 M98 148 H116" pathLength="1" style="--i:8"/>
+<text x="150" y="10" style="--i:9">L 65</text>
+</svg>
+<svg class="sk sk-mouse" viewBox="0 0 200 250" aria-hidden="true">
+<path class="guide" d="M100 22 V236" pathLength="1" style="--i:0"/>
+<path class="guide" d="M40 244 H160" pathLength="1" style="--i:1"/>
+<path class="guide" d="M40 239 V249 M160 239 V249" pathLength="1" style="--i:2"/>
+<path d="M100 44 C150 44 160 84 160 132 C160 202 140 226 100 226 C60 226 40 202 40 132 C40 84 50 44 100 44 Z" pathLength="1" style="--i:3"/>
+<path d="M100 44 V112" pathLength="1" style="--i:4"/>
+<path d="M42 112 Q100 124 158 112" pathLength="1" style="--i:5"/>
+<path d="M94 68 Q94 62 100 62 Q106 62 106 68 V86 Q106 92 100 92 Q94 92 94 86 Z" pathLength="1" style="--i:6"/>
+<path d="M100 44 Q100 22 122 16 T166 4" pathLength="1" style="--i:7"/>
+<text x="86" y="258" style="--i:8">W 62</text>
 </svg>
 <svg class="sk sk-bow" viewBox="0 0 220 250" aria-hidden="true">
 <path class="guide" d="M18 120 H200" pathLength="1" style="--i:0"/>
@@ -269,18 +289,28 @@
       </a>
     </li>
 
+    <li>
+      <a href="https://www.polarsteps.com/fractalise" target="_blank" rel="noopener">
+        <!-- ICON: replace this whole <svg> with <img class="icon" src="polarsteps.svg" alt=""> -->
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="6" cy="18" r="2"/>
+          <circle cx="18" cy="6" r="2"/>
+          <path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6" stroke-dasharray="2 2.2"/>
+        </svg>
+        <span class="label">Polarsteps</span>
+      </a>
+    </li>
+
     <!-- To add another link, copy the <li> block above and change the address, icon and name -->
   </ul>
 
-  <footer>&copy; <span id="yr"></span> Jonathan Vieira</footer>
 </main>
-<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 <script>
 (function () {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.documentElement.classList.add('animate');
   var STEP = 0.45, DRAW = 1.4, HOLD = 5, FADE = 1.5, GAP = 1;
-  var starts = { 'sk-ski': 0, 'sk-wind': 2.5, 'sk-bow': 5, 'sk-ball': 7.5 };
+  var starts = { 'sk-ski': 0, 'sk-wind': 1.5, 'sk-axe': 3, 'sk-mouse': 4.5, 'sk-bow': 6, 'sk-ball': 7.5 };
   document.querySelectorAll('.sk').forEach(function (svg) {
     var items = svg.querySelectorAll('path, text');
     function cycle() {
