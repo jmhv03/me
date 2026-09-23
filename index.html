@@ -287,6 +287,8 @@
     cursor: pointer;
   }
   .posts-more:hover { background: var(--gold); color: var(--black); }
+  .posts-more[hidden] { display: none; }
+  .posts-more:disabled { opacity: .5; cursor: wait; }
 
   /* Post viewer */
   .viewer {
@@ -1081,7 +1083,7 @@
   // It accepts Instagram's own export file (posts_1.json) as-is, or a simple list like:
   // [ { "images": ["media/one.jpg", "media/two.jpg"], "caption": "Text", "date": "2025-03-14" } ]
   // Any of these files that exist next to this page are merged into one grid (missing ones are skipped)
-  var SOURCES = ['posts.json', 'posts_2.json', 'posts_3.json', 'posts_4.json', 'posts_5.json', 'reels.json'];
+  var SOURCES = ['posts.json', 'posts_1.json', 'posts_2.json', 'posts_3.json', 'posts_4.json', 'posts_5.json', 'reels.json'];
   var PAGE = 12;
 
   var grid = document.getElementById('post-grid');
@@ -1142,21 +1144,75 @@
   var ICON_MULTI = '<svg class="badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>';
   var ICON_VIDEO = '<svg class="badge" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 
-  function renderMore() {
-    posts.slice(shown, shown + PAGE).forEach(function (p, j) {
-      var i = shown + j;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'post-tile';
-      b.setAttribute('aria-label', 'Open post' + (p.caption ? ': ' + p.caption.slice(0, 60) : ''));
-      b.appendChild(mediaEl(p.images[0], true));
-      if (p.images.length > 1) b.insertAdjacentHTML('beforeend', ICON_MULTI);
-      else if (isVideo(p.images[0])) b.insertAdjacentHTML('beforeend', ICON_VIDEO);
-      b.onclick = function () { open(i); };
-      grid.appendChild(b);
+  // ---- Skip photos/videos that have been deleted from the repo ----
+  var all = [], checked = 0, checking = false, waiters = [];
+  function exists(src) {
+    return fetch(src, { method: 'HEAD' }).then(function (r) { return r.ok; }).catch(function () { return false; });
+  }
+  function checkPost(p) {
+    return Promise.all(p.images.map(exists)).then(function (ok) {
+      p.images = p.images.filter(function (_, k) { return ok[k]; });
+      return p.images.length > 0;
     });
-    shown = Math.min(posts.length, shown + PAGE);
-    more.hidden = shown >= posts.length;
+  }
+  function checkAll() {
+    if (checking) return;
+    checking = true;
+    (function batch() {
+      if (checked >= all.length) { finish(); return; }
+      var slice = all.slice(checked, checked + PAGE);
+      checked += slice.length;
+      Promise.all(slice.map(checkPost)).then(function (ok) {
+        slice.forEach(function (p, k) { if (ok[k]) posts.push(p); });
+        document.getElementById('post-count').textContent = posts.length;
+        notify();
+        batch();
+      });
+    })();
+  }
+  function finish() {
+    document.getElementById('post-count').textContent = posts.length;
+    if (!posts.length) empty.hidden = false;
+    notify();
+  }
+  function notify() {
+    waiters = waiters.filter(function (w) {
+      if (posts.length >= w.need || checked >= all.length) { w.done(); return false; }
+      return true;
+    });
+    if (!viewer.hidden) show();
+    more.hidden = shown >= posts.length && checked >= all.length;
+  }
+  function ready(need) {
+    return new Promise(function (done) {
+      if (posts.length >= need || checked >= all.length) done();
+      else waiters.push({ need: need, done: done });
+    });
+  }
+
+  var rendering = false;
+  function renderMore() {
+    if (rendering) return;
+    rendering = true;
+    more.disabled = true;
+    ready(shown + PAGE).then(function () {
+      posts.slice(shown, shown + PAGE).forEach(function (p, j) {
+        var i = shown + j;
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'post-tile';
+        b.setAttribute('aria-label', 'Open post' + (p.caption ? ': ' + p.caption.slice(0, 60) : ''));
+        b.appendChild(mediaEl(p.images[0], true));
+        if (p.images.length > 1) b.insertAdjacentHTML('beforeend', ICON_MULTI);
+        else if (isVideo(p.images[0])) b.insertAdjacentHTML('beforeend', ICON_VIDEO);
+        b.onclick = function () { open(i); };
+        grid.appendChild(b);
+      });
+      shown = Math.min(posts.length, shown + PAGE);
+      more.hidden = shown >= posts.length && checked >= all.length;
+      more.disabled = false;
+      rendering = false;
+    });
   }
   more.onclick = renderMore;
 
@@ -1232,11 +1288,11 @@
   }))
     .then(function (lists) {
       var seen = {};
-      posts = [].concat.apply([], lists)
+      all = [].concat.apply([], lists)
         .filter(function (p) { var k = p.images[0]; if (seen[k]) return false; seen[k] = 1; return true; })
         .sort(function (a, b) { return (b.time || 0) - (a.time || 0); });
-      document.getElementById('post-count').textContent = posts.length;
-      if (!posts.length) { empty.hidden = false; return; }
+      if (!all.length) { empty.hidden = false; return; }
+      checkAll();
       renderMore();
     })
     .catch(function () { empty.hidden = false; });
