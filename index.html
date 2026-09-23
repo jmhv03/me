@@ -148,6 +148,220 @@
   .links a:hover { background: var(--gold); color: var(--black); }
   .links a:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
 
+  /* Globe */
+  .travel { width: 100%; margin-top: 3.5rem; }
+  .travel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: .8rem;
+    font-size: .8rem;
+    font-stretch: 87.5%;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .travel-head h2 { font: inherit; color: var(--gold); }
+  .travel-head .count { color: var(--text-dim); }
+  .travel-head .count b { color: var(--gold); font-weight: 700; }
+  .globe-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    background: rgba(0,0,0,.6);
+    overflow: hidden;
+  }
+  .globe-frame canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+  }
+  .globe-frame canvas:active { cursor: grabbing; }
+  .globe-frame .corner {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--gold);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .corner.tl { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+  .corner.tr { top: 8px; right: 8px; border-width: 1px 1px 0 0; }
+  .corner.bl { bottom: 8px; left: 8px; border-width: 0 0 1px 1px; }
+  .corner.br { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+  .zoom-btns {
+    position: absolute;
+    right: 12px;
+    bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .zoom-btns button {
+    width: 2rem; height: 2rem;
+    border: 1px solid var(--gold);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--gold);
+    font: 700 1rem "Martian Mono", monospace;
+    cursor: pointer;
+  }
+  .zoom-btns button:hover { background: var(--gold); color: var(--black); }
+  .here {
+    position: absolute;
+    top: -5px; left: -5px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ff3b30;
+    box-shadow: 0 0 8px #ff3b30;
+    pointer-events: none;
+  }
+  .here[hidden] { display: none; }
+  .here::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: #ff3b30;
+    animation: ping 1.6s ease-out infinite;
+  }
+  .readout {
+    margin-top: .7rem;
+    min-height: 1.3em;
+    font-size: .75rem;
+    font-stretch: 87.5%;
+    color: var(--text-dim);
+    text-align: left;
+  }
+  .readout .name { color: var(--gold); }
+
+  /* Posts */
+  .posts { width: 100%; margin-top: 3.5rem; }
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .post-tile {
+    position: relative;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    background: var(--panel);
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .post-tile img, .post-tile video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .3s ease, opacity .2s ease;
+  }
+  .post-tile:hover img, .post-tile:hover video { transform: scale(1.04); opacity: .8; }
+  .post-tile:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+  .post-tile .badge {
+    position: absolute; top: 6px; right: 6px;
+    width: 18px; height: 18px;
+    color: #fff;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.7));
+  }
+  .posts-empty, .posts-more {
+    margin-top: .9rem;
+    font-size: .75rem;
+    font-stretch: 87.5%;
+    color: var(--text-dim);
+  }
+  .posts-more {
+    display: block;
+    width: 100%;
+    padding: .8rem;
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .posts-more:hover { background: var(--gold); color: var(--black); }
+
+  /* Post viewer */
+  .viewer {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 3rem) 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    background: rgba(0,0,0,.96);
+    backdrop-filter: blur(4px);
+  }
+  .viewer[hidden] { display: none; }
+  .viewer-card {
+    width: 100%;
+    max-width: 34rem;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    background: var(--black);
+    overflow: hidden;
+  }
+  .viewer-media {
+    position: relative;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0;
+    flex: 1 1 auto;
+    touch-action: pan-y;
+  }
+  .viewer-media img, .viewer-media video {
+    display: block;
+    max-width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
+  }
+  .viewer-text {
+    padding: .9rem 1rem 1rem;
+    text-align: left;
+    font-size: .8rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    max-height: 22vh;
+  }
+  .viewer-meta { color: var(--gold); font-size: .7rem; margin-bottom: .4rem; }
+  .viewer-caption { white-space: pre-line; font-stretch: 87.5%; }
+  .viewer-dots {
+    position: absolute; bottom: 10px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 5px;
+    pointer-events: none;
+  }
+  .viewer-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.45); }
+  .viewer-dots span.on { background: var(--gold); }
+  .vbtn {
+    position: absolute;
+    width: 2.2rem; height: 2.2rem;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    background: rgba(0,0,0,.6);
+    color: var(--gold);
+    font: 700 1rem "Martian Mono", monospace;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .vbtn:hover { background: var(--gold); color: var(--black); }
+  .vbtn[hidden] { display: none; }
+  .slide-prev { left: 8px; top: 50%; transform: translateY(-50%); }
+  .slide-next { right: 8px; top: 50%; transform: translateY(-50%); }
+  .viewer-close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + .6rem); right: .8rem; }
+  .post-prev { position: fixed; left: .8rem; bottom: calc(env(safe-area-inset-bottom, 0px) + 1.2rem); }
+  .post-next { position: fixed; right: .8rem; bottom: calc(env(safe-area-inset-bottom, 0px) + 1.2rem); }
+  @media (min-width: 900px) {
+    .post-prev, .post-next { top: 50%; bottom: auto; transform: translateY(-50%); }
+    .post-prev { left: 1.5rem; } .post-next { right: 1.5rem; }
+  }
+
 
   /* Blueprint sketches */
   main { position: relative; z-index: 1; }
@@ -187,7 +401,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    h1::after, .location .dot::after { animation: none; }
+    h1::after, .location .dot::after, .here::after { animation: none; }
     .links a { transition: none; }
   }
 </style>
@@ -308,7 +522,53 @@
     <!-- To add another link, copy the <li> block above and change the address, icon and name -->
   </ul>
 
+  <section class="travel" aria-label="Countries visited">
+    <div class="travel-head">
+      <h2>World map</h2>
+      <span class="count"><b id="visited-count">0</b>/<span id="total-count">197</span></span>
+    </div>
+    <div class="globe-frame">
+      <canvas id="globe"></canvas>
+      <span class="here" id="globe-here" hidden></span>
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <div class="zoom-btns">
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">&minus;</button>
+      </div>
+    </div>
+    <p class="readout" id="readout">&gt; drag to spin, scroll or pinch to zoom</p>
+  </section>
+
+  <section class="posts" aria-label="Posts">
+    <div class="travel-head">
+      <h2>Posts</h2>
+      <span class="count"><b id="post-count">0</b> posts</span>
+    </div>
+    <div class="post-grid" id="post-grid"></div>
+    <p class="posts-empty" id="posts-empty" hidden>&gt; no posts yet</p>
+    <button type="button" class="posts-more" id="posts-more" hidden>Load more</button>
+  </section>
+
 </main>
+
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Post">
+  <button type="button" class="vbtn viewer-close" id="v-close" aria-label="Close">&times;</button>
+  <button type="button" class="vbtn post-prev" id="v-post-prev" aria-label="Previous post">&lsaquo;</button>
+  <button type="button" class="vbtn post-next" id="v-post-next" aria-label="Next post">&rsaquo;</button>
+  <div class="viewer-card">
+    <div class="viewer-media" id="v-media">
+      <button type="button" class="vbtn slide-prev" id="v-prev" aria-label="Previous photo">&lsaquo;</button>
+      <button type="button" class="vbtn slide-next" id="v-next" aria-label="Next photo">&rsaquo;</button>
+      <div class="viewer-dots" id="v-dots"></div>
+    </div>
+    <div class="viewer-text">
+      <div class="viewer-meta" id="v-meta"></div>
+      <div class="viewer-caption" id="v-caption"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -346,6 +606,589 @@
     var cls = Object.keys(starts).find(function (c) { return svg.classList.contains(c); });
     setTimeout(cycle, (starts[cls] || 0) * 1000);
   });
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function () {
+  // Countries you've visited: use the English names as they appear when you hover on the map
+  var VISITED = [
+    'Scotland', 'England', 'Northern Ireland', 'France', 'Spain', 'Portugal', 'Germany', 'Italy',
+    'Gibraltar', 'Egypt', 'USA', 'Brazil', 'Bolivia', 'Vietnam', 'Laos',
+    'Thailand', 'Malaysia', 'Singapore', 'Cambodia'
+  ];
+  var TOTAL = 197;
+
+  // Other spellings people commonly use, mapped to the map's own names
+  var ALIASES = {
+    'usa': 'united states of america', 'us': 'united states of america', 'united states': 'united states of america',
+    'ni': 'northern ireland', 'n. ireland': 'northern ireland',
+    'czech republic': 'czechia', 'holland': 'netherlands', 'the netherlands': 'netherlands',
+    'ivory coast': "côte d'ivoire", 'bosnia': 'bosnia and herz.', 'bosnia and herzegovina': 'bosnia and herz.',
+    'dominican republic': 'dominican rep.', 'south korea': 'south korea', 'north macedonia': 'macedonia',
+    'uae': 'united arab emirates', 'drc': 'dem. rep. congo', 'democratic republic of the congo': 'dem. rep. congo'
+  };
+  function key(n) { n = (n || '').trim().toLowerCase(); return ALIASES[n] || n; }
+
+  var canvas = document.getElementById('globe');
+  var readout = document.getElementById('readout');
+  var here = document.getElementById('globe-here');
+  var ctx = canvas.getContext('2d');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var UK_ALL = ['england', 'scotland', 'wales', 'northern ireland'];
+  var visitedSet = new Set();
+  VISITED.forEach(function (n) {
+    var k = key(n);
+    if (k === 'uk' || k === 'united kingdom' || k === 'great britain') UK_ALL.forEach(function (x) { visitedSet.add(x); });
+    else visitedSet.add(k);
+  });
+  document.getElementById('visited-count').textContent = visitedSet.size;
+  document.getElementById('total-count').textContent = TOTAL;
+
+  // Current location comes from the line under your name
+  var locEl = document.querySelector('.location');
+  var locName = locEl ? key(locEl.textContent.replace(/.*:/, '')) : '';
+  var locPoint = null;
+
+  var projection = d3.geoOrthographic().rotate([40, -10]).precision(2).clipAngle(90);
+  var path = d3.geoPath(projection, ctx);
+  var graticule = d3.geoGraticule().step([20, 20])();
+  var sphere = { type: 'Sphere' };
+  var countries = [], borders = null, visitedShapes = [], visitedDots = [];
+  // Places too small for the map data, by [longitude, latitude]
+  var TINY = { 'Gibraltar': [-5.35, 36.14], 'Singapore': [103.82, 1.35] };
+  var size = 0, dpr = 1, zoom = 1, base = 1;
+  var hovered = null, lastInteract = -1e9, dirty = true;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    size = canvas.clientWidth;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    base = size / 2 - 16;
+    applyZoom();
+  }
+  function applyZoom() {
+    projection.scale(base * zoom).translate([size / 2, size / 2]);
+    dirty = true;
+  }
+
+  function isVisited(f) { return visitedSet.has(key(f.properties.name)); }
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.beginPath(); path(sphere);
+    ctx.fillStyle = '#080703'; ctx.fill();
+
+    ctx.beginPath(); path(graticule);
+    ctx.strokeStyle = 'rgba(212,175,55,.14)'; ctx.lineWidth = .6; ctx.stroke();
+
+    if (visitedShapes.length) {
+      ctx.beginPath(); visitedShapes.forEach(function (f) { path(f); });
+      ctx.fillStyle = 'rgba(212,175,55,.78)'; ctx.fill();
+    }
+    if (hovered) {
+      ctx.beginPath(); path(hovered);
+      ctx.fillStyle = isVisited(hovered) ? 'rgba(245,215,120,.95)' : 'rgba(212,175,55,.22)';
+      ctx.fill();
+    }
+
+    if (borders) {
+      ctx.beginPath(); path(borders);
+      ctx.strokeStyle = 'rgba(212,175,55,.7)'; ctx.lineWidth = .6; ctx.stroke();
+    }
+
+    // tiny visited places get a gold dot so they can be seen
+    if (visitedDots.length) {
+      var r = projection.rotate(), centre = [-r[0], -r[1]];
+      ctx.fillStyle = '#e8c65a';
+      visitedDots.forEach(function (p) {
+        if (d3.geoDistance(p, centre) > Math.PI / 2 - 0.02) return;
+        var xy = projection(p);
+        ctx.beginPath(); ctx.arc(xy[0], xy[1], 2.5, 0, 2 * Math.PI); ctx.fill();
+      });
+    }
+
+    ctx.beginPath(); path(sphere);
+    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1.2; ctx.stroke();
+
+    placeHere();
+    dirty = false;
+  }
+
+  function placeHere() {
+    if (!locPoint) { here.hidden = true; return; }
+    var r = projection.rotate();
+    var front = d3.geoDistance(locPoint, [-r[0], -r[1]]) < Math.PI / 2 - 0.02;
+    var xy = projection(locPoint);
+    if (!front || !xy || xy[0] < 0 || xy[1] < 0 || xy[0] > size || xy[1] > size) { here.hidden = true; return; }
+    here.hidden = false;
+    here.style.transform = 'translate(' + xy[0] + 'px,' + xy[1] + 'px)';
+  }
+
+  // TopoJSON decoder with line simplification (keeps every country, drops fine detail)
+  function perpDist(p, a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+    if (!l) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+    var t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l));
+    return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+  }
+  function dp(pts, tol) {
+    if (pts.length < 3) return pts;
+    var keep = new Uint8Array(pts.length), stack = [[0, pts.length - 1]];
+    keep[0] = keep[pts.length - 1] = 1;
+    while (stack.length) {
+      var s = stack.pop(), a = s[0], b = s[1], max = 0, idx = -1;
+      for (var i = a + 1; i < b; i++) {
+        var d = perpDist(pts[i], pts[a], pts[b]);
+        if (d > max) { max = d; idx = i; }
+      }
+      if (max > tol) { keep[idx] = 1; stack.push([a, idx], [idx, b]); }
+    }
+    return pts.filter(function (_, i) { return keep[i]; });
+  }
+  function simplify(pts, tol) {
+    var f = pts[0], l = pts[pts.length - 1];
+    var xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+    if (Math.max.apply(null, xs) - Math.min.apply(null, xs) < tol * 4 &&
+        Math.max.apply(null, ys) - Math.min.apply(null, ys) < tol * 4) return pts;
+    if (pts.length > 3 && f[0] === l[0] && f[1] === l[1]) {
+      // closed loop (small island): split at the farthest point so it keeps its shape
+      var far = 1, fd = 0;
+      for (var i = 1; i < pts.length - 1; i++) {
+        var d = Math.hypot(pts[i][0] - f[0], pts[i][1] - f[1]);
+        if (d > fd) { fd = d; far = i; }
+      }
+      var a = dp(pts.slice(0, far + 1), tol), b = dp(pts.slice(far), tol);
+      var out = a.concat(b.slice(1));
+      if (out.length < 4) out = [pts[0], pts[far >> 1 || 1], pts[far], pts[pts.length - 1]];
+      return out;
+    }
+    return dp(pts, tol);
+  }
+  // A polygon covering more than half the globe has been drawn inside-out: flip it
+  function fixWinding(f) {
+    var polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+    polys.forEach(function (poly) {
+      if (d3.geoArea({ type: 'Polygon', coordinates: poly }) > 2 * Math.PI) {
+        poly.forEach(function (ring) { ring.reverse(); });
+      }
+    });
+  }
+
+  // ---- United Kingdom split into England, Scotland, Wales and Northern Ireland ----
+  // Approximate nation borders as straight lines (good enough at globe scale)
+  var SCOT_A = [-3.05, 54.98], SCOT_B = [-2.03, 55.80];   // Solway Firth to Berwick
+  var WALES_A = [-2.66, 51.60], WALES_B = [-3.08, 53.25]; // Severn estuary to Dee estuary
+  var UK_LINES = [[SCOT_A, SCOT_B], [WALES_A, WALES_B]];
+
+  function plane(a, b, ref) {
+    var s = side(a, b, ref) >= 0 ? 1 : -1;
+    return { a: a, b: b, s: s };
+  }
+  function side(a, b, p) { return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]); }
+  function clipRing(ring, pl) {
+    var out = [], n = ring.length;
+    for (var i = 0; i < n - 1; i++) {
+      var p = ring[i], q = ring[i + 1];
+      var sp = side(pl.a, pl.b, p) * pl.s, sq = side(pl.a, pl.b, q) * pl.s;
+      if (sp >= 0) out.push(p);
+      if ((sp >= 0) !== (sq >= 0)) {
+        var tt = sp / (sp - sq);
+        out.push([p[0] + (q[0] - p[0]) * tt, p[1] + (q[1] - p[1]) * tt]);
+      }
+    }
+    if (out.length) out.push(out[0].slice());
+    return out;
+  }
+  function clipPoly(poly, planes) {
+    var rings = poly.map(function (ring) {
+      return planes.reduce(function (r, pl) { return r.length > 3 ? clipRing(r, pl) : r; }, ring);
+    });
+    if (rings[0].length < 4) return null;
+    return [rings[0]].concat(rings.slice(1).filter(function (r) { return r.length >= 4; }));
+  }
+
+  function splitUK(feats) {
+    var i = feats.findIndex(function (f) { return f.properties.name === 'United Kingdom'; });
+    if (i < 0) return feats;
+    var uk = feats[i];
+    var polys = uk.geometry.type === 'Polygon' ? [uk.geometry.coordinates] : uk.geometry.coordinates;
+    var edinburgh = [-3.2, 55.95], london = [-0.1, 51.5], aber = [-4.08, 52.41];
+    var WEST = [-10, 0], EAST = [2, 0];
+    var southLine = [[-10, 51.38], [2, 51.38]], northLine = [[-10, 53.45], [2, 53.45]];
+    var scotland = [plane(SCOT_A, SCOT_B, edinburgh)];
+    var southOfScot = plane(SCOT_A, SCOT_B, london);
+    var westOfWales = plane(WALES_A, WALES_B, aber), eastOfWales = plane(WALES_A, WALES_B, london);
+    var wales = [southOfScot, westOfWales,
+                 plane(southLine[0], southLine[1], aber), plane(northLine[0], northLine[1], aber)];
+    var englandParts = [
+      [southOfScot, eastOfWales],
+      [southOfScot, westOfWales, plane(southLine[0], southLine[1], [-4, 50.5])],
+      [southOfScot, westOfWales, plane(northLine[0], northLine[1], [-3, 54])]
+    ];
+    var out = { 'England': [], 'Scotland': [], 'Wales': [], 'Northern Ireland': [] };
+    polys.forEach(function (poly) {
+      var r = poly[0], mx = 0, my = 0;
+      r.forEach(function (p) { mx += p[0]; my += p[1]; });
+      mx /= r.length; my /= r.length;
+      if (mx < -5.4 && my < 55.5) { out['Northern Ireland'].push(poly); return; }
+      var c;
+      if ((c = clipPoly(poly, scotland))) out['Scotland'].push(c);
+      if ((c = clipPoly(poly, wales))) out['Wales'].push(c);
+      englandParts.forEach(function (planes) {
+        if ((c = clipPoly(poly, planes))) out['England'].push(c);
+      });
+    });
+    var nations = Object.keys(out).filter(function (n) { return out[n].length; }).map(function (n) {
+      return { type: 'Feature', properties: { name: n }, geometry: { type: 'MultiPolygon', coordinates: out[n] } };
+    });
+    return feats.slice(0, i).concat(nations, feats.slice(i + 1));
+  }
+
+  function decode(topo, objKey, tol) {
+    var t = topo.transform;
+    var arcs = topo.arcs.map(function (a) {
+      var x = 0, y = 0;
+      var pts = a.map(function (p) {
+        if (!t) return p;
+        x += p[0]; y += p[1];
+        return [x * t.scale[0] + t.translate[0], y * t.scale[1] + t.translate[1]];
+      });
+      return simplify(pts, tol);
+    });
+    function ring(ids) {
+      var pts = [];
+      ids.forEach(function (i, k) {
+        var a = i >= 0 ? arcs[i] : arcs[~i].slice().reverse();
+        pts = pts.concat(k ? a.slice(1) : a);
+      });
+      return pts;
+    }
+    var feats = topo.objects[objKey].geometries.map(function (g) {
+      var coords = g.type === 'Polygon' ? g.arcs.map(ring)
+        : g.type === 'MultiPolygon' ? g.arcs.map(function (p) { return p.map(ring); }) : null;
+      return { type: 'Feature', properties: g.properties || {},
+               geometry: coords ? { type: g.type, coordinates: coords } : null };
+    }).filter(function (f) { return f.geometry; });
+    feats.forEach(fixWinding);
+    feats = splitUK(feats);
+    feats.forEach(function (f) { f.bounds = d3.geoBounds(f); });
+    // every arc once, so shared borders are only drawn a single time
+    var mesh = { type: 'MultiLineString', coordinates: arcs.concat(UK_LINES) };
+    return { features: feats, mesh: mesh };
+  }
+
+  // Centre of a country's largest landmass (keeps the dot off far-flung islands)
+  function mainCentroid(f) {
+    if (f.geometry.type !== 'MultiPolygon') return d3.geoCentroid(f);
+    var best = null, area = -1;
+    f.geometry.coordinates.forEach(function (poly) {
+      var g = { type: 'Polygon', coordinates: poly }, a = d3.geoArea(g);
+      if (a > area) { area = a; best = g; }
+    });
+    return d3.geoCentroid(best);
+  }
+
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json')
+    .then(function (r) { return r.json(); })
+    .then(function (topo) {
+      var d = decode(topo, 'countries', 0.12);
+      countries = d.features; borders = d.mesh;
+      Object.keys(TINY).forEach(function (n) {
+        if (countries.some(function (f) { return key(f.properties.name) === key(n); })) return;
+        var c = TINY[n], e = 0.04;
+        var f = { type: 'Feature', properties: { name: n }, geometry: { type: 'Polygon', coordinates: [[
+          [c[0] - e, c[1] - e], [c[0] - e, c[1] + e], [c[0] + e, c[1] + e], [c[0] + e, c[1] - e], [c[0] - e, c[1] - e]
+        ]] } };
+        f.bounds = d3.geoBounds(f);
+        countries.push(f);
+      });
+      visitedShapes = countries.filter(isVisited);
+      visitedDots = visitedShapes.filter(function (f) { return d3.geoArea(f) < 3e-5; })
+        .map(function (f) { return mainCentroid(f); });
+      var loc = countries.find(function (f) { return key(f.properties.name) === locName; });
+      if (loc) {
+        locPoint = mainCentroid(loc);
+        projection.rotate([-locPoint[0] + 30, -locPoint[1] * 0.6]);
+      }
+      dirty = true;
+    })
+    .catch(function () { readout.textContent = '> map data could not load'; });
+
+  // Interaction
+  var pointers = new Map(), dragStart = null, pinchStart = null;
+
+  function setZoom(z) { zoom = Math.max(1, Math.min(10, z)); applyZoom(); lastInteract = performance.now(); }
+  document.getElementById('zoom-in').onclick = function () { setZoom(zoom * 1.5); };
+  document.getElementById('zoom-out').onclick = function () { setZoom(zoom / 1.5); };
+
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    setZoom(zoom * Math.exp(-e.deltaY * 0.0015));
+  }, { passive: false });
+
+  function localPoint(e) {
+    var r = canvas.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    canvas.setPointerCapture(e.pointerId);
+    var p = localPoint(e);
+    pointers.set(e.pointerId, p);
+    lastInteract = performance.now();
+    if (pointers.size === 1) {
+      dragStart = { p: p, r: projection.rotate() };
+      if (e.pointerType !== 'mouse') hover(p);
+    } else if (pointers.size === 2) {
+      var ps = Array.from(pointers.values());
+      pinchStart = { d: Math.hypot(ps[0][0] - ps[1][0], ps[0][1] - ps[1][1]), z: zoom };
+      dragStart = null;
+    }
+  });
+
+  var hoverQueued = null;
+  canvas.addEventListener('pointermove', function (e) {
+    var p = localPoint(e);
+    if (pointers.has(e.pointerId)) {
+      pointers.set(e.pointerId, p);
+      lastInteract = performance.now();
+      if (pointers.size === 2 && pinchStart) {
+        var ps = Array.from(pointers.values());
+        setZoom(pinchStart.z * Math.hypot(ps[0][0] - ps[1][0], ps[0][1] - ps[1][1]) / pinchStart.d);
+      } else if (dragStart) {
+        var k = 0.3 / zoom, r = dragStart.r;
+        projection.rotate([
+          r[0] + (p[0] - dragStart.p[0]) * k,
+          Math.max(-90, Math.min(90, r[1] - (p[1] - dragStart.p[1]) * k)),
+          r[2]
+        ]);
+        dirty = true;
+      }
+      return; // skip country lookup while dragging
+    }
+    hoverQueued = p;
+  });
+
+  function release(e) {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinchStart = null;
+    if (pointers.size === 1) dragStart = { p: Array.from(pointers.values())[0], r: projection.rotate() };
+    else if (pointers.size === 0) dragStart = null;
+  }
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', function (e) {
+    if (e.pointerType === 'mouse') { hoverQueued = null; setHovered(null); }
+  });
+
+  function inBounds(b, ll) {
+    if (ll[1] < b[0][1] || ll[1] > b[1][1]) return false;
+    if (b[0][0] <= b[1][0]) return ll[0] >= b[0][0] && ll[0] <= b[1][0];
+    return ll[0] >= b[0][0] || ll[0] <= b[1][0]; // crosses the date line
+  }
+  function hover(p) {
+    var ll = projection.invert(p), r = projection.rotate(), found = null;
+    if (ll && d3.geoDistance(ll, [-r[0], -r[1]]) < Math.PI / 2) {
+      for (var i = 0; i < countries.length; i++) {
+        var f = countries[i];
+        if (inBounds(f.bounds, ll) && d3.geoContains(f, ll)) { found = f; break; }
+      }
+    }
+    setHovered(found);
+  }
+  function setHovered(f) {
+    if (f === hovered) return;
+    hovered = f; dirty = true;
+    if (f) {
+      var tags = [];
+      if (isVisited(f)) tags.push('visited');
+      if (key(f.properties.name) === locName) tags.push('current location');
+      readout.innerHTML = '&gt; <span class="name"></span>' + (tags.length ? ' &middot; ' + tags.join(' &middot; ') : '');
+      readout.querySelector('.name').textContent = f.properties.name || 'Unknown';
+    } else {
+      readout.innerHTML = '&gt; drag to spin, scroll or pinch to zoom';
+    }
+  }
+
+  // Loop
+  var last = performance.now();
+  function frame(now) {
+    var dt = Math.min(now - last, 100); last = now;
+    if (hoverQueued) { hover(hoverQueued); hoverQueued = null; }
+    if (now - lastInteract > 3000 && pointers.size === 0 && !reduceMotion) {
+      var r = projection.rotate();
+      projection.rotate([r[0] + dt * 0.006, r[1], r[2]]);
+      dirty = true;
+    }
+    if (dirty) draw();
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+(function () {
+  // Posts are read from posts.json next to this page.
+  // It accepts Instagram's own export file (posts_1.json) as-is, or a simple list like:
+  // [ { "images": ["media/one.jpg", "media/two.jpg"], "caption": "Text", "date": "2025-03-14" } ]
+  var SOURCE = 'posts.json';
+  var PAGE = 12;
+
+  var grid = document.getElementById('post-grid');
+  var more = document.getElementById('posts-more');
+  var empty = document.getElementById('posts-empty');
+  var viewer = document.getElementById('viewer');
+  var vMedia = document.getElementById('v-media');
+  var vDots = document.getElementById('v-dots');
+  var vMeta = document.getElementById('v-meta');
+  var vCaption = document.getElementById('v-caption');
+  var posts = [], shown = 0, cur = 0, slide = 0, lastFocus = null;
+
+  var isVideo = function (src) { return /\.(mp4|mov|webm|m4v)(\?|$)/i.test(src); };
+
+  // Instagram exports store text with broken accents and emoji; this repairs it
+  function fixText(s) {
+    if (!s) return '';
+    try { return decodeURIComponent(escape(s)); } catch (e) { return s; }
+  }
+
+  function normalise(data) {
+    var list = Array.isArray(data) ? data : (data.ig_posts || data.posts || []);
+    return list.map(function (p) {
+      var images, caption, time;
+      if (p.media) {
+        images = p.media.map(function (m) { return m.uri; });
+        caption = fixText(p.title || (p.media[0] && p.media[0].title) || '');
+        time = p.creation_timestamp || (p.media[0] && p.media[0].creation_timestamp);
+        time = time ? new Date(time * 1000) : null;
+      } else {
+        images = p.images || (p.image ? [p.image] : []);
+        caption = p.caption || '';
+        time = p.date ? new Date(p.date) : null;
+      }
+      return { images: images.filter(Boolean), caption: caption, time: time };
+    }).filter(function (p) { return p.images.length; })
+      .sort(function (a, b) { return (b.time || 0) - (a.time || 0); });
+  }
+
+  function mediaEl(src, thumb) {
+    var el;
+    if (isVideo(src)) {
+      el = document.createElement('video');
+      el.src = thumb ? src + '#t=0.1' : src;
+      el.playsInline = true;
+      el.preload = 'metadata';
+      if (thumb) { el.muted = true; } else { el.controls = true; el.autoplay = true; }
+    } else {
+      el = document.createElement('img');
+      el.src = src;
+      el.alt = '';
+      el.decoding = 'async';
+      if (thumb) el.loading = 'lazy';
+    }
+    return el;
+  }
+
+  var ICON_MULTI = '<svg class="badge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>';
+  var ICON_VIDEO = '<svg class="badge" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+  function renderMore() {
+    posts.slice(shown, shown + PAGE).forEach(function (p, j) {
+      var i = shown + j;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'post-tile';
+      b.setAttribute('aria-label', 'Open post' + (p.caption ? ': ' + p.caption.slice(0, 60) : ''));
+      b.appendChild(mediaEl(p.images[0], true));
+      if (p.images.length > 1) b.insertAdjacentHTML('beforeend', ICON_MULTI);
+      else if (isVideo(p.images[0])) b.insertAdjacentHTML('beforeend', ICON_VIDEO);
+      b.onclick = function () { open(i); };
+      grid.appendChild(b);
+    });
+    shown = Math.min(posts.length, shown + PAGE);
+    more.hidden = shown >= posts.length;
+  }
+  more.onclick = renderMore;
+
+  function fmtDate(d) {
+    return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  }
+
+  function show() {
+    var p = posts[cur];
+    Array.prototype.slice.call(vMedia.querySelectorAll('img, video')).forEach(function (n) { n.remove(); });
+    vMedia.insertBefore(mediaEl(p.images[slide], false), vMedia.firstChild);
+    vDots.innerHTML = p.images.length > 1
+      ? p.images.map(function (_, k) { return '<span' + (k === slide ? ' class="on"' : '') + '></span>'; }).join('') : '';
+    document.getElementById('v-prev').hidden = slide === 0;
+    document.getElementById('v-next').hidden = slide >= p.images.length - 1;
+    document.getElementById('v-post-prev').hidden = cur === 0;
+    document.getElementById('v-post-next').hidden = cur >= posts.length - 1;
+    vMeta.textContent = fmtDate(p.time) + (p.images.length > 1 ? '  ·  ' + (slide + 1) + '/' + p.images.length : '');
+    vCaption.textContent = p.caption;
+  }
+  function open(i) {
+    lastFocus = document.activeElement;
+    cur = i; slide = 0;
+    viewer.hidden = false;
+    document.body.style.overflow = 'hidden';
+    show();
+    document.getElementById('v-close').focus();
+  }
+  function close() {
+    viewer.hidden = true;
+    document.body.style.overflow = '';
+    vMedia.querySelectorAll('video').forEach(function (v) { v.pause(); });
+    if (lastFocus) lastFocus.focus();
+  }
+  function step(d) {
+    var n = posts[cur].images.length;
+    if (slide + d >= 0 && slide + d < n) { slide += d; show(); }
+  }
+  function jump(d) {
+    if (cur + d < 0 || cur + d >= posts.length) return;
+    cur += d; slide = 0;
+    if (cur >= shown) renderMore();
+    show();
+  }
+
+  document.getElementById('v-close').onclick = close;
+  document.getElementById('v-prev').onclick = function () { step(-1); };
+  document.getElementById('v-next').onclick = function () { step(1); };
+  document.getElementById('v-post-prev').onclick = function () { jump(-1); };
+  document.getElementById('v-post-next').onclick = function () { jump(1); };
+  viewer.addEventListener('click', function (e) { if (e.target === viewer) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (viewer.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowLeft') { if (slide > 0) step(-1); else jump(-1); }
+    else if (e.key === 'ArrowRight') { if (slide < posts[cur].images.length - 1) step(1); else jump(1); }
+  });
+
+  // swipe between photos in a post
+  var sx = null;
+  vMedia.addEventListener('pointerdown', function (e) { sx = e.clientX; });
+  vMedia.addEventListener('pointerup', function (e) {
+    if (sx === null) return;
+    var dx = e.clientX - sx; sx = null;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+  });
+
+  fetch(SOURCE)
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (data) {
+      posts = normalise(data);
+      document.getElementById('post-count').textContent = posts.length;
+      if (!posts.length) { empty.hidden = false; return; }
+      renderMore();
+    })
+    .catch(function () { empty.hidden = false; });
 })();
 </script>
 </body>
