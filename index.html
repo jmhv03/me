@@ -161,6 +161,21 @@
     text-transform: uppercase;
   }
   .travel-head h2 { font: inherit; color: var(--gold); }
+  .tabs { display: flex; gap: 1.1rem; }
+  .tab {
+    padding: 0 0 .3rem;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--text-dim);
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
   .travel-head .count { color: var(--text-dim); }
   .travel-head .count b { color: var(--gold); font-weight: 700; }
   .globe-frame {
@@ -526,7 +541,10 @@
 
   <section class="travel" aria-label="Countries visited">
     <div class="travel-head">
-      <h2>World map</h2>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" class="tab on" id="tab-map" aria-selected="true">World map</button>
+        <button type="button" role="tab" class="tab" id="tab-wonders" aria-selected="false">Wonders</button>
+      </div>
       <span class="count"><b id="visited-count">0</b>/<span id="total-count">197</span></span>
     </div>
     <div class="globe-frame">
@@ -621,6 +639,34 @@
   ];
   var TOTAL = 197;
 
+  // Wonders: [name, latitude, longitude, visited (true/false)]
+  var WONDERS = [
+    ['Eiffel Tower', 48.858, 2.294, true],
+    ['Colosseum', 41.890, 12.492, true],
+    ['Angkor Wat', 13.412, 103.867, true],
+    ['Pyramids of Giza', 29.979, 31.134, true],
+    ['Cristo Redentor', -22.952, -43.211, true],
+    ['Stonehenge', 51.179, -1.826, false],
+    ['Alhambra', 37.176, -3.588, false],
+    ['Timbuktu', 16.773, -3.007, false],
+    ['Neuschwanstein', 47.558, 10.750, true],
+    ['Acropolis of Athens', 37.971, 23.726, false],
+    ['Kremlin & Red Square', 55.754, 37.620, false],
+    ['Hagia Sophia', 41.009, 28.980, false],
+    ['Petra', 30.329, 35.444, false],
+    ['Taj Mahal', 27.175, 78.042, false],
+    ['Sydney Opera House', -33.857, 151.215, false],
+    ['Great Wall of China', 40.432, 116.570, false],
+    ['Kiyomizu-dera', 34.995, 135.785, false],
+    ['Moai Statues', -27.125, -109.350, false],
+    ['Chichén Itzá', 20.684, -88.568, false],
+    ['Statue of Liberty', 40.689, -74.045, false],
+    ['Machu Picchu', -13.163, -72.545, false],
+    ['Tenochtitlan', 19.435, -99.131, false]
+  ];
+  var W_TOTAL = WONDERS.length;
+  var mode = 'map', hoveredWonder = null, wonderXY = [];
+
   // Other spellings people commonly use, mapped to the map's own names
   var ALIASES = {
     'usa': 'united states of america', 'us': 'united states of america', 'united states': 'united states of america',
@@ -645,8 +691,28 @@
     if (k === 'uk' || k === 'united kingdom' || k === 'great britain') UK_ALL.forEach(function (x) { visitedSet.add(x); });
     else visitedSet.add(k);
   });
-  document.getElementById('visited-count').textContent = visitedSet.size;
-  document.getElementById('total-count').textContent = TOTAL;
+  function updateCount() {
+    document.getElementById('visited-count').textContent = mode === 'map'
+      ? visitedSet.size
+      : WONDERS.filter(function (w) { return w[3]; }).length;
+    document.getElementById('total-count').textContent = mode === 'map' ? TOTAL : W_TOTAL;
+  }
+  updateCount();
+
+  function setMode(m) {
+    mode = m;
+    ['map', 'wonders'].forEach(function (k) {
+      var b = document.getElementById('tab-' + k);
+      b.classList.toggle('on', k === m);
+      b.setAttribute('aria-selected', k === m);
+    });
+    hovered = null; hoveredWonder = null;
+    readout.innerHTML = '&gt; drag to spin, scroll or pinch to zoom';
+    updateCount();
+    dirty = true;
+  }
+  document.getElementById('tab-map').onclick = function () { setMode('map'); };
+  document.getElementById('tab-wonders').onclick = function () { setMode('wonders'); };
 
   // Current location comes from the line under your name
   var locEl = document.querySelector('.location');
@@ -688,13 +754,13 @@
     ctx.beginPath(); path(graticule);
     ctx.strokeStyle = 'rgba(212,175,55,.14)'; ctx.lineWidth = .6; ctx.stroke();
 
-    if (visitedShapes.length) {
+    if (mode === 'map' && visitedShapes.length) {
       ctx.beginPath(); visitedShapes.forEach(function (f) { path(f); });
       ctx.fillStyle = 'rgba(212,175,55,.78)'; ctx.fill();
     }
     if (hovered) {
       ctx.beginPath(); path(hovered);
-      ctx.fillStyle = isVisited(hovered) ? 'rgba(245,215,120,.95)' : 'rgba(212,175,55,.22)';
+      ctx.fillStyle = mode === 'map' && isVisited(hovered) ? 'rgba(245,215,120,.95)' : 'rgba(212,175,55,.22)';
       ctx.fill();
     }
 
@@ -704,7 +770,7 @@
     }
 
     // tiny visited places get a gold dot so they can be seen
-    if (visitedDots.length) {
+    if (mode === 'map' && visitedDots.length) {
       var r = projection.rotate(), centre = [-r[0], -r[1]];
       ctx.fillStyle = '#e8c65a';
       visitedDots.forEach(function (p) {
@@ -714,6 +780,8 @@
       });
     }
 
+    if (mode === 'wonders') drawWonders();
+
     ctx.beginPath(); path(sphere);
     ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1.2; ctx.stroke();
 
@@ -721,8 +789,48 @@
     dirty = false;
   }
 
+  function drawWonders() {
+    var r = projection.rotate(), centre = [-r[0], -r[1]];
+    wonderXY = [];
+    ctx.font = '500 10px "Martian Mono", "Courier New", monospace';
+    ctx.textBaseline = 'middle';
+    WONDERS.forEach(function (w) {
+      var ll = [w[2], w[1]];
+      if (d3.geoDistance(ll, centre) > Math.PI / 2 - 0.02) return;
+      var xy = projection(ll);
+      if (xy) wonderXY.push({ w: w, x: xy[0], y: xy[1] });
+    });
+    // dots first
+    wonderXY.forEach(function (o) {
+      var big = o.w === hoveredWonder;
+      ctx.beginPath(); ctx.arc(o.x, o.y, big ? 6 : 4.5, 0, 2 * Math.PI);
+      ctx.fillStyle = o.w[3] ? '#34d27b' : '#ff3b30'; ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = '#000'; ctx.stroke();
+    });
+    // then labels, skipping any that would overlap one already drawn (zoom in to see them)
+    var placed = [];
+    var order = wonderXY.slice().sort(function (a, b) {
+      return (b.w === hoveredWonder) - (a.w === hoveredWonder);
+    });
+    order.forEach(function (o) {
+      var wdt = ctx.measureText(o.w[0]).width;
+      var left = o.x > size - wdt - 20;
+      var x0 = left ? o.x - 9 - wdt : o.x + 9, box = [x0 - 2, o.y - 7, x0 + wdt + 2, o.y + 7];
+      var clash = placed.some(function (b) {
+        return box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1];
+      }) || wonderXY.some(function (d) {
+        return d !== o && d.x > box[0] - 4 && d.x < box[2] + 4 && d.y > box[1] - 4 && d.y < box[3] + 4;
+      });
+      if (clash && o.w !== hoveredWonder) return;
+      placed.push(box);
+      ctx.textAlign = 'left';
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(o.w[0], x0, o.y);
+      ctx.fillStyle = o.w === hoveredWonder ? '#fff' : '#efe3bd'; ctx.fillText(o.w[0], x0, o.y);
+    });
+  }
+
   function placeHere() {
-    if (!locPoint) { here.hidden = true; return; }
+    if (!locPoint || mode !== 'map') { here.hidden = true; return; }
     var r = projection.rotate();
     var front = d3.geoDistance(locPoint, [-r[0], -r[1]]) < Math.PI / 2 - 0.02;
     var xy = projection(locPoint);
@@ -1036,6 +1144,21 @@
     return ll[0] >= b[0][0] || ll[0] <= b[1][0]; // crosses the date line
   }
   function hover(p) {
+    if (mode === 'wonders') {
+      var near = null, best = 14;
+      wonderXY.forEach(function (o) {
+        var d = Math.hypot(o.x - p[0], o.y - p[1]);
+        if (d < best) { best = d; near = o.w; }
+      });
+      if (near !== hoveredWonder) {
+        hoveredWonder = near; dirty = true;
+        if (near) {
+          readout.innerHTML = '&gt; <span class="name"></span> &middot; ' + (near[3] ? 'visited' : 'not yet');
+          readout.querySelector('.name').textContent = near[0];
+        }
+      }
+      if (near) { if (hovered) { hovered = null; dirty = true; } return; }
+    }
     var ll = projection.invert(p), r = projection.rotate(), found = null;
     if (ll && d3.geoDistance(ll, [-r[0], -r[1]]) < Math.PI / 2) {
       for (var i = 0; i < countries.length; i++) {
@@ -1046,12 +1169,12 @@
     setHovered(found);
   }
   function setHovered(f) {
-    if (f === hovered) return;
+    if (f === hovered && !(f === null && hoveredWonder === null && readout.querySelector('.name'))) return;
     hovered = f; dirty = true;
     if (f) {
       var tags = [];
-      if (isVisited(f)) tags.push('visited');
-      if (key(f.properties.name) === locName) tags.push('current location');
+      if (mode === 'map' && isVisited(f)) tags.push('visited');
+      if (mode === 'map' && key(f.properties.name) === locName) tags.push('current location');
       readout.innerHTML = '&gt; <span class="name"></span>' + (tags.length ? ' &middot; ' + tags.join(' &middot; ') : '');
       readout.querySelector('.name').textContent = f.properties.name || 'Unknown';
     } else {
