@@ -736,14 +736,14 @@
     mode = m;
     ['map', 'wonders', 'flags'].forEach(function (k) {
       var b = document.getElementById('tab-' + k);
-      b.classList.toggle('on', k === m);
+      b.classList.toggle('on', k === m);ev
       b.setAttribute('aria-selected', k === m);
     });
     hovered = null; hoveredWonder = null;
     frameEl.classList.toggle('flags', m === 'flags');
     flagGrid.hidden = m !== 'flags';
     readout.innerHTML = m === 'flags'
-      ? '&gt; tap a flag to find it on the globe'
+      ? '&gt; collected country flags - alphabetically'
       : '&gt; drag to spin, scroll or pinch to zoom';
     updateCount();
     dirty = true;
