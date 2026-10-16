@@ -833,21 +833,6 @@
     flagGrid.appendChild(b);
   });
 
-  // Tapping a flag switches to the globe and turns it to face that country
-  function flyTo(k) {
-    var f = countries.find(function (c) { return key(c.properties.name) === k; });
-    setMode('map');
-    if (!f) return;
-    var p = mainCentroid(f);
-    projection.rotate([-p[0], -p[1]]);
-    lastInteract = performance.now() + 2000;
-    setHovered(f);
-    dirty = true;
-  }
-  document.getElementById('tab-map').onclick = function () { setMode('map'); };
-  document.getElementById('tab-wonders').onclick = function () { setMode('wonders'); };
-  document.getElementById('tab-flags').onclick = function () { setMode('flags'); };
-
   // Current location comes from the line under your name
   var locEl = document.querySelector('.location');
   var locName = locEl ? key(locEl.textContent.replace(/.*:/, '')) : '';
