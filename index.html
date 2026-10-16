@@ -177,20 +177,31 @@
   .tab.on { color: var(--gold); border-bottom-color: var(--gold); }
   .tab:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
   .globe-frame.flags canvas, .globe-frame.flags .here, .globe-frame.flags .zoom-btns { display: none; }
+  /* Flags grow to fill the box: the page picks 3x3 up to 8x8 columns from the number of flags.
+     Gaps are always 28% of a flag's width, the same both ways. Past 64 flags it scrolls. */
   .flag-grid {
     position: absolute;
     inset: 0;
-    padding: 1.6rem 1.4rem;
+    --cols: 8;
+    --cell: calc(89.5cqw / (var(--cols) + (var(--cols) - 1) * 0.28));
+    padding: 5cqw 5cqw 4.5cqw;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(3.1rem, 1fr));
-    gap: .9rem;
-    align-content: start;
+    grid-template-columns: repeat(var(--cols), var(--cell));
+    grid-auto-rows: var(--cell);
+    gap: calc(var(--cell) * 0.28);
+    justify-content: center;
+    align-content: center;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
   }
+  .flag-grid.full { align-content: start; }
   .flag-grid[hidden] { display: none; }
   .flag {
     width: 100%;
+    height: auto;
     aspect-ratio: 1;
+    align-self: start;
     padding: 0;
     border-width: 0px;
     border-radius: 50%;
@@ -210,6 +221,7 @@
   .travel-head .count b { color: var(--gold); font-weight: 700; }
   .globe-frame {
     position: relative;
+    container-type: inline-size;
     width: 100%;
     aspect-ratio: 1;
     border: 1px solid var(--gold);
@@ -736,7 +748,7 @@
     mode = m;
     ['map', 'wonders', 'flags'].forEach(function (k) {
       var b = document.getElementById('tab-' + k);
-      b.classList.toggle('on', k === m);ev
+      b.classList.toggle('on', k === m);
       b.setAttribute('aria-selected', k === m);
     });
     hovered = null; hoveredWonder = null;
@@ -827,11 +839,17 @@
     b.addEventListener('mouseenter', say);
     b.addEventListener('focus', say);
     b.addEventListener('mouseleave', function () {
-      if (mode === 'flags') readout.innerHTML = '&gt; tap a flag to find it on the globe';
+      if (mode === 'flags') readout.innerHTML = '&gt; collected country flags - alphabetically';
     });
-    b.onclick = function () { flyTo(f.k); };
     flagGrid.appendChild(b);
   });
+  // Grid size follows the number of flags: 3x3, 4x4... up to 8x8, then it scrolls
+  var cols = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(flagList.length))));
+  flagGrid.style.setProperty('--cols', cols);
+  flagGrid.classList.toggle('full', flagList.length > 64);
+  document.getElementById('tab-map').onclick = function () { setMode('map'); };
+  document.getElementById('tab-wonders').onclick = function () { setMode('wonders'); };
+  document.getElementById('tab-flags').onclick = function () { setMode('flags'); };
 
   // Current location comes from the line under your name
   var locEl = document.querySelector('.location');
