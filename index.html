@@ -782,6 +782,13 @@
       } catch (e) {}
     }
   } catch (e) {}
+  // Flags drawn here instead, where the flag set uses a different one (French Guiana's is the French tricolour)
+  var FLAG_SVGS = {
+    'french guiana': 'data:image/svg+xml,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">' +
+      '<rect width="30" height="30" fill="#fde42d"/><path d="M0 0H30V30Z" fill="#2fa04a"/>' +
+      '<path fill="#e1001a" d="M15 7.2l2.1 6.4h6.7l-5.4 3.9 2.1 6.4-5.5-4-5.5 4 2.1-6.4-5.4-3.9h6.7z"/></svg>')
+  };
   function flagCode(k) { return FLAG_CODES[k] || NAME_TO_CODE[norm(k)] || null; }
 
   var frameEl = document.querySelector('.globe-frame');
@@ -795,15 +802,16 @@
       flagList.push({ k: x, name: ks.length > 1 ? x.replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) : n });
     });
   });
+  flagList.sort(function (a, b) { return a.name.localeCompare(b.name, 'en'); });
   flagList.forEach(function (f) {
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'flag';
     b.setAttribute('aria-label', f.name);
-    var code = flagCode(f.k);
+    var code = FLAG_SVGS[f.k] ? f.k.slice(0, 2) : flagCode(f.k);
     if (code) {
       var img = document.createElement('img');
-      img.src = FLAG_URL + code + '.svg';
+      img.src = FLAG_SVGS[f.k] || FLAG_URL + code + '.svg';
       img.alt = '';
       img.loading = 'lazy';
       img.onerror = function () { b.innerHTML = '<span class="code">' + code.slice(-2).toUpperCase() + '</span>'; };
