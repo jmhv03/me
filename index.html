@@ -176,6 +176,36 @@
   .tab:hover { color: var(--text); }
   .tab.on { color: var(--gold); border-bottom-color: var(--gold); }
   .tab:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+  .globe-frame.flags canvas, .globe-frame.flags .here, .globe-frame.flags .zoom-btns { display: none; }
+  .flag-grid {
+    position: absolute;
+    inset: 0;
+    padding: 1.6rem 1.4rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.1rem, 1fr));
+    gap: .9rem;
+    align-content: start;
+    overflow-y: auto;
+  }
+  .flag-grid[hidden] { display: none; }
+  .flag {
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 1.5px solid var(--gold-dim);
+    border-radius: 50%;
+    background: var(--panel);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .flag .code {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    color: var(--gold); font: 700 .7rem "Martian Mono", monospace;
+  }
+  .flag:hover, .flag:focus-visible, .flag.on { border-color: var(--gold); transform: scale(1.08); outline: none; }
   .travel-head .count { color: var(--text-dim); }
   .travel-head .count b { color: var(--gold); font-weight: 700; }
   .globe-frame {
@@ -419,6 +449,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     h1::after, .location .dot::after, .here::after { animation: none; }
+    .flag { transition: none; }
     .links a { transition: none; }
   }
 </style>
@@ -544,6 +575,7 @@
       <div class="tabs" role="tablist">
         <button type="button" role="tab" class="tab on" id="tab-map" aria-selected="true">World map</button>
         <button type="button" role="tab" class="tab" id="tab-wonders" aria-selected="false">Wonders</button>
+        <button type="button" role="tab" class="tab" id="tab-flags" aria-selected="false">Flags</button>
       </div>
       <span class="count"><b id="visited-count">0</b>/<span id="total-count">197</span></span>
     </div>
@@ -552,6 +584,7 @@
       <span class="here" id="globe-here" hidden></span>
       <span class="corner tl"></span><span class="corner tr"></span>
       <span class="corner bl"></span><span class="corner br"></span>
+      <div class="flag-grid" id="flag-grid" hidden></div>
       <div class="zoom-btns">
         <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
         <button type="button" id="zoom-out" aria-label="Zoom out">&minus;</button>
@@ -692,27 +725,120 @@
     else visitedSet.add(k);
   });
   function updateCount() {
-    document.getElementById('visited-count').textContent = mode === 'map'
-      ? visitedSet.size
-      : WONDERS.filter(function (w) { return w[3]; }).length;
-    document.getElementById('total-count').textContent = mode === 'map' ? TOTAL : W_TOTAL;
+    document.getElementById('visited-count').textContent = mode === 'wonders'
+      ? WONDERS.filter(function (w) { return w[3]; }).length
+      : visitedSet.size;
+    document.getElementById('total-count').textContent = mode === 'wonders' ? W_TOTAL : TOTAL;
   }
   updateCount();
 
   function setMode(m) {
     mode = m;
-    ['map', 'wonders'].forEach(function (k) {
+    ['map', 'wonders', 'flags'].forEach(function (k) {
       var b = document.getElementById('tab-' + k);
       b.classList.toggle('on', k === m);
       b.setAttribute('aria-selected', k === m);
     });
     hovered = null; hoveredWonder = null;
-    readout.innerHTML = '&gt; drag to spin, scroll or pinch to zoom';
+    frameEl.classList.toggle('flags', m === 'flags');
+    flagGrid.hidden = m !== 'flags';
+    readout.innerHTML = m === 'flags'
+      ? '&gt; tap a flag to find it on the globe'
+      : '&gt; drag to spin, scroll or pinch to zoom';
     updateCount();
+    dirty = true;
+  }
+
+  // ---- Flags ----
+  // Flag images come from the open-source flag-icons set; the four UK nations use their own flags
+  var FLAG_URL = 'https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.2.3/flags/1x1/';
+  var FLAG_CODES = {
+    'scotland': 'gb-sct', 'england': 'gb-eng', 'wales': 'gb-wls', 'northern ireland': 'gb-nir',
+    'united kingdom': 'gb', 'united states of america': 'us', 'bonaire': 'bq', 'saba': 'bq', 'sint eustatius': 'bq',
+    'dem. rep. congo': 'cd', 'congo': 'cg', 'central african rep.': 'cf', 'bosnia and herz.': 'ba',
+    'dominican rep.': 'do', 'eq. guinea': 'gq', 's. sudan': 'ss', 'w. sahara': 'eh', 'solomon is.': 'sb',
+    'marshall is.': 'mh', "côte d'ivoire": 'ci', 'macedonia': 'mk', 'eswatini': 'sz', 'swaziland': 'sz',
+    'n. cyprus': 'cy', 'falkland is.': 'fk', 'fr. s. antarctic lands': 'tf', 'faeroe is.': 'fo',
+    'cayman is.': 'ky', 'turks and caicos is.': 'tc', 'british virgin is.': 'vg', 'u.s. virgin is.': 'vi',
+    'cook is.': 'ck', 'n. mariana is.': 'mp', 'st. vin. and gren.': 'vc', 'st. kitts and nevis': 'kn',
+    'antigua and barb.': 'ag', 'são tomé and principe': 'st', 'timor-leste': 'tl', 'palestine': 'ps'
+  };
+  // Every other country is looked up by its English name, using the browser's own country list
+  function norm(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/\(.*?\)/g, '').replace(/\s+-\s+.*$/, '').replace(/[’']/g, "'").replace(/&/g, 'and').trim();
+  }
+  var NAME_TO_CODE = {};
+  // retired codes (East Germany, North Vietnam, USSR...) that would otherwise steal today's names
+  var OLD_CODES = ['AN','BU','CS','CT','DD','DY','FQ','FX','HV','JT','MI','NH','NQ','NT','PC','PU','PZ','RH','SU','TP','VD','WK','YD','YU','ZR'];
+  try {
+    var dn = new Intl.DisplayNames(['en'], { type: 'region' });
+    for (var a = 65; a <= 90; a++) for (var b = 65; b <= 90; b++) {
+      var c = String.fromCharCode(a, b);
+      if (OLD_CODES.indexOf(c) > -1) continue;
+      try {
+        var nm = dn.of(c);
+        if (nm && nm !== c && !NAME_TO_CODE[norm(nm)]) NAME_TO_CODE[norm(nm)] = c.toLowerCase();
+      } catch (e) {}
+    }
+  } catch (e) {}
+  function flagCode(k) { return FLAG_CODES[k] || NAME_TO_CODE[norm(k)] || null; }
+
+  var frameEl = document.querySelector('.globe-frame');
+  var flagGrid = document.getElementById('flag-grid');
+  var flagList = [];
+  VISITED.forEach(function (n) {
+    var k = key(n);
+    var ks = (k === 'uk' || k === 'united kingdom' || k === 'great britain') ? UK_ALL : [k];
+    ks.forEach(function (x) {
+      if (flagList.some(function (f) { return f.k === x; })) return;
+      flagList.push({ k: x, name: ks.length > 1 ? x.replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) : n });
+    });
+  });
+  flagList.forEach(function (f) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'flag';
+    b.setAttribute('aria-label', f.name);
+    var code = flagCode(f.k);
+    if (code) {
+      var img = document.createElement('img');
+      img.src = FLAG_URL + code + '.svg';
+      img.alt = '';
+      img.loading = 'lazy';
+      img.onerror = function () { b.innerHTML = '<span class="code">' + code.slice(-2).toUpperCase() + '</span>'; };
+      b.appendChild(img);
+    } else {
+      b.innerHTML = '<span class="code"></span>';
+      b.firstChild.textContent = f.name.slice(0, 2).toUpperCase();
+    }
+    function say() {
+      readout.innerHTML = '&gt; <span class="name"></span>';
+      readout.querySelector('.name').textContent = f.name;
+    }
+    b.addEventListener('mouseenter', say);
+    b.addEventListener('focus', say);
+    b.addEventListener('mouseleave', function () {
+      if (mode === 'flags') readout.innerHTML = '&gt; tap a flag to find it on the globe';
+    });
+    b.onclick = function () { flyTo(f.k); };
+    flagGrid.appendChild(b);
+  });
+
+  // Tapping a flag switches to the globe and turns it to face that country
+  function flyTo(k) {
+    var f = countries.find(function (c) { return key(c.properties.name) === k; });
+    setMode('map');
+    if (!f) return;
+    var p = mainCentroid(f);
+    projection.rotate([-p[0], -p[1]]);
+    lastInteract = performance.now() + 2000;
+    setHovered(f);
     dirty = true;
   }
   document.getElementById('tab-map').onclick = function () { setMode('map'); };
   document.getElementById('tab-wonders').onclick = function () { setMode('wonders'); };
+  document.getElementById('tab-flags').onclick = function () { setMode('flags'); };
 
   // Current location comes from the line under your name
   var locEl = document.querySelector('.location');
@@ -1192,7 +1318,7 @@
       projection.rotate([r[0] + dt * 0.006, r[1], r[2]]);
       dirty = true;
     }
-    if (dirty) draw();
+    if (dirty && mode !== 'flags') draw();
     requestAnimationFrame(frame);
   }
   window.addEventListener('resize', resize);
